@@ -1,0 +1,116 @@
+MOSIFY-VIDEO-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    NOTIFICATION-GROUP, OBJECT-GROUP
+        FROM SNMPv2-CONF
+    DisplayString
+        FROM SNMPv2-TC
+    OBJECT-TYPE, NOTIFICATION-TYPE, Integer32, MODULE-IDENTITY
+        FROM SNMPv2-SMI
+    mosify
+        FROM MOSIFY-MIB
+    Float64TC
+        FROM FLOAT-TC-MIB
+;
+
+--
+-- top level structure
+--
+
+videoMOSify MODULE-IDENTITY
+    LAST-UPDATED "201812180000Z"
+    ORGANIZATION "qoefly"
+    CONTACT-INFO
+         "Sofiene Jelassi"
+    DESCRIPTION
+         "QEEFLY MIB"
+    REVISION     "201812180000Z"
+    DESCRIPTION  "video QOEFLY MIB"
+    ::= { mosify 2 }
+
+
+videoNotifications      OBJECT IDENTIFIER ::= { videoMOSify  0 }
+videoConfigInfo         OBJECT IDENTIFIER ::= { videoMOSify  1 }
+videoMOSInfo           OBJECT IDENTIFIER ::= { videoMOSify  2 }       
+
+
+videoNotificationsObjects       OBJECT IDENTIFIER ::= { videoNotifications  0 }
+videoMOSHit                     OBJECT IDENTIFIER ::= { videoNotifications  1 }
+
+---
+--- A Table of video Config Information 
+---
+
+videoConfigTable OBJECT-TYPE   
+    SYNTAX       SEQUENCE OF videoConfigTableEntry
+    MAX-ACCESS   not-accessible
+    STATUS       current
+    DESCRIPTION  "A config video 2-column table"
+    ::= { videoConfigInfo 1 }
+
+videoConfigTableEntry OBJECT-TYPE
+    SYNTAX       videoConfigTableEntry
+    MAX-ACCESS   not-accessible
+    STATUS       current
+    DESCRIPTION  "A row of data in videoTable"
+    INDEX        { videoParamConfigName }
+    ::= { videoConfigTable 1 }
+
+videoConfigTableEntry ::= SEQUENCE {
+    videoParamConfigName     DisplayString,
+    videoParamConfigValue    DisplayString
+}
+
+videoParamConfigName OBJECT-TYPE
+    SYNTAX           DisplayString
+    MAX-ACCESS       read-only
+    STATUS           current
+    DESCRIPTION      "A name of an video parameter"
+    ::= { videoConfigTableEntry 1 }
+
+videoParamConfigValue OBJECT-TYPE
+    SYNTAX            DisplayString
+    MAX-ACCESS        read-only
+    STATUS            current
+    DESCRIPTION       "A value related to an video configuration parameter"
+    ::= { videoConfigTableEntry 2 }
+
+
+---
+--- videoMOSInfo 
+---
+
+videoMOS OBJECT-TYPE
+    SYNTAX       Float64TC
+    MAX-ACCESS   read-only
+    STATUS       current
+    DESCRIPTION  "The float value of MOS listening only"
+    ::= { videoMOSInfo 2 }
+
+---
+--- Notifications/Traps
+---
+
+videoTrapTime OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION "trap timestamp"
+    ::= { videoNotificationsObjects 1 }
+
+videoTrapData OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION "trap included data"
+    ::= { videoNotificationsObjects 2 }
+
+videoMOSHit NOTIFICATION-TYPE 
+    OBJECTS      {videoTrapData, videoTrapTime, videoMOSHit}
+    STATUS       current
+    DESCRIPTION  "A trap generated when videoMOSHit is less than a certain threshold 
+                         videoMOS < 2.5
+                  "
+    ::= { videoNotifications 1 }
+
+END
