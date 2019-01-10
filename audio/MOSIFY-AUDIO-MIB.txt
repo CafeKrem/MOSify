@@ -1,0 +1,125 @@
+MOSIFY-AUDIO-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    NOTIFICATION-GROUP, OBJECT-GROUP
+        FROM SNMPv2-CONF
+    DisplayString
+        FROM SNMPv2-TC
+    OBJECT-TYPE, NOTIFICATION-TYPE, Integer32, MODULE-IDENTITY
+        FROM SNMPv2-SMI
+    mosify
+        FROM MOSIFY-MIB
+    Float64TC
+        FROM FLOAT-TC-MIB
+;
+
+--
+-- top level structure
+--
+
+audioMOSify MODULE-IDENTITY
+    LAST-UPDATED "201812180000Z"
+    ORGANIZATION "MOSify"
+    CONTACT-INFO
+         "Sofiene Jelassi"
+    DESCRIPTION
+         "MOSIFY MIB"
+    REVISION     "201812180000Z"
+    DESCRIPTION  "Audio MOSIFY MIB"
+    ::= { mosify 1 }
+
+
+audioNotifications      OBJECT IDENTIFIER ::= { audioMOSify  0 }
+audioConfigInfo         OBJECT IDENTIFIER ::= { audioMOSify  1 }
+audioMOSInfo            OBJECT IDENTIFIER ::= { audioMOSify  2 }       
+
+
+audioNotificationsObjects       OBJECT IDENTIFIER ::= { audioNotifications  0 }
+audioMOSHit                     OBJECT IDENTIFIER ::= { audioNotifications  1 }
+
+---
+--- A Table of Audio Config Information 
+---
+
+audioConfigTable OBJECT-TYPE   
+    SYNTAX       SEQUENCE OF AudioConfigTableEntry
+    MAX-ACCESS   not-accessible
+    STATUS       current
+    DESCRIPTION  "A config audio 2-column table"
+    ::= { audioConfigInfo 1 }
+
+audioConfigTableEntry OBJECT-TYPE
+    SYNTAX       AudioConfigTableEntry
+    MAX-ACCESS   not-accessible
+    STATUS       current
+    DESCRIPTION  "A row of data in audioTable"
+    INDEX        { audioParamConfigName }
+    ::= { audioConfigTable 1 }
+
+AudioConfigTableEntry ::= SEQUENCE {
+    audioParamConfigName     DisplayString,
+    audioParamConfigValue    DisplayString
+}
+
+audioParamConfigName OBJECT-TYPE
+    SYNTAX           DisplayString
+    MAX-ACCESS       read-only
+    STATUS           current
+    DESCRIPTION      "A name of an audio parameter"
+    ::= { audioConfigTableEntry 1 }
+
+audioParamConfigValue OBJECT-TYPE
+    SYNTAX            DisplayString
+    MAX-ACCESS        read-only
+    STATUS            current
+    DESCRIPTION       "A value related to an audio configuration parameter"
+    ::= { audioConfigTableEntry 2 }
+
+
+---
+--- audioMOSInfo 
+---
+
+audioMOScom OBJECT-TYPE
+    SYNTAX       Float64TC
+    MAX-ACCESS   read-only
+    STATUS       current
+    DESCRIPTION  "The float value of MOS compression"
+    ::= { audioMOSInfo 1 }
+
+
+audioMOStot OBJECT-TYPE
+    SYNTAX       Float64TC
+    MAX-ACCESS   read-only
+    STATUS       current
+    DESCRIPTION  "The float value of MOS total"
+    ::= { audioMOSInfo 2 }
+
+
+---
+--- Notifications/Traps
+---
+
+audioTrapTime OBJECT-TYPE
+    SYNTAX      Integer32
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION "trap timestamp"
+    ::= { audioNotificationsObjects 1 }
+
+audioTrapData OBJECT-TYPE
+    SYNTAX      DisplayString
+    MAX-ACCESS  accessible-for-notify
+    STATUS      current
+    DESCRIPTION "trap included data"
+    ::= { audioNotificationsObjects 2 }
+
+audioMOSHit NOTIFICATION-TYPE 
+    OBJECTS      {audioTrapData, audioTrapTime, audioMOSHit}
+    STATUS       current
+    DESCRIPTION  "A trap generated when audioMOSHit is less than a certain threshold 
+                         audioMOS < 2.5
+                 "
+    ::= { audioNotifications 1 }
+
+END
