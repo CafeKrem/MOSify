@@ -1,0 +1,61 @@
+#
+# Warning: you may need more libraries than are included here on the
+# build line.  The agent frequently needs various libraries in order
+# to compile pieces of it, but is OS dependent and we can't list all
+# the combinations here.  Instead, look at the libraries that were
+# used when linking the snmpd master agent and copy those to this
+# file.
+#
+
+CC=gcc
+TARGETS=audioMOSify
+
+BUILDLIBS=`net-snmp-config --libs`
+BUILDAGENTLIBS=`net-snmp-config --agent-libs`
+
+# shared library flags (assumes gcc)
+DLFLAGS=-fPIC -shared
+
+TABLE_PREFIX=audioConfigTable
+
+NETSNMPCONFIG=net-snmp-config
+
+NETSNMPCFLAGS=`$(NETSNMPCONFIG) --base-cflags`
+NETSNMPLIBS=`$(NETSNMPCONFIG) --agent-libs`
+
+LIBS=$(NETSNMPLIBS)
+
+STRICT_FLAGS = -Wall -Wstrict-prototypes
+CFLAGS=-I. -I./config -I./mos -I./trap $(NETSNMPCFLAGS) $(STRICT_FLAGS)
+
+USER_SRCS = \
+	config/$(TABLE_PREFIX)_data_get.c \
+	config/$(TABLE_PREFIX)_data_set.c \
+	config/$(TABLE_PREFIX)_data_access.c
+
+SRCS = $(USER_SRCS) \
+	config/$(TABLE_PREFIX).c \
+	config/$(TABLE_PREFIX)_subagent.c \
+	config/$(TABLE_PREFIX)_interface.c
+
+USER_OBJS =  \
+	config/$(TABLE_PREFIX)_data_get.o \
+	config/$(TABLE_PREFIX)_data_set.o \
+	config/$(TABLE_PREFIX)_data_access.o 
+
+OBJS =  $(USER_OBJS) \
+	config/$(TABLE_PREFIX).o \
+	config/$(TABLE_PREFIX)_interface.o \
+        trap/audioMOSify_traps.o \
+        mos/audioMOSify.o \
+        audioMOSify_subagent.o
+
+all: $(TARGETS)
+
+user: $(USER_OBJS)
+
+audioMOSify: $(OBJS)
+	$(CC) -o audioMOSify $(OBJS) $(BUILDAGENTLIBS)
+
+clean:
+	rm $(OBJS)
